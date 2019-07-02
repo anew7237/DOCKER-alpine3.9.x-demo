@@ -1,0 +1,41 @@
+## BUILD
+docker build --force-rm -t anew7237/alpine3.9.x-anew:20190701a . > _dockerBuild.log
+docker inspect anew7237/alpine3.9.x-anew:20190701a >> _dockerBuild.log
+
+## RUN & TEST
+docker run -dt -p 33022:22 --name alpine3.9.x-anew1 anew7237/alpine3.9.x-anew:20190701a
+docker exec -it alpine3.9.x-anew1 sh
+##### ssh login to localhost:33022 #####
+docker kill alpine3.9.x-anew1
+docker rm alpine3.9.x-anew1
+docker rmi anew7237/alpine3.9.x-anew:20190701a
+
+## Tag to latest
+docker tag anew7237/alpine3.9.x-anew:20190701a anew7237/alpine3.9.x-anew:anewresty
+
+##### ##### ##### ##### ##### ##### ##### ##### ##### ##### ##### 
+## BUILD - coderesty
+docker build --force-rm -t anew7237/alpine3.9.x-anew:coderesty -f ./Dockerfile.coderesty.txt . > _dockerBuild.coderesty.log
+docker inspect anew7237/alpine3.9.x-anew:coderesty >> _dockerBuild.coderesty.log
+
+## RUN & TEST
+docker run -dt -p 34022:22 --name alpine-coderesty1 anew7237/alpine3.9.x-anew:coderesty
+docker exec -it alpine-coderesty1 sh
+##### ssh login to localhost:34022 #####
+docker kill alpine-coderesty1
+docker rm alpine-coderesty1
+docker rmi anew7237/alpine3.9.x-anew:coderesty
+
+##### ##### ##### ##### ##### ##### ##### ##### ##### ##### ##### 
+## BUILD - testresty
+docker build --force-rm -t anew7237/alpine3.9.x-anew:testresty -f ./Dockerfile.testresty.txt . > _dockerBuild.testresty.log
+docker inspect anew7237/alpine3.9.x-anew:testresty >> _dockerBuild.testresty.log
+
+## RUN & TEST
+docker run -dt -p 34022:22 --name alpine-testresty1 anew7237/alpine3.9.x-anew:testresty
+docker exec -it alpine-testresty1 sh
+##### ssh login to localhost:34022 #####
+docker kill alpine-testresty1
+docker rm alpine-testresty1
+docker rmi anew7237/alpine3.9.x-anew:testresty
+

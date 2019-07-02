@@ -1,0 +1,14 @@
+## BUILD
+docker build --force-rm -t anew7237/alpine-openresty:code0701a . > _dockerBuild.log
+docker inspect anew7237/alpine-openresty:code0701a >> _dockerBuild.log
+
+## RUN & TEST
+docker run -dt -p 35022:22 -p 80:80 -p 443:443 --name alpine-openresty1 anew7237/alpine-openresty:code0701a
+docker exec -it alpine-openresty1 sh
+##### ssh login to localhost:35022 #####
+docker kill alpine-openresty1
+docker rm alpine-openresty1
+docker rmi anew7237/alpine-openresty:code0701a
+
+## Tag to latest
+
