@@ -3,8 +3,8 @@
 FROM anew7237/alpine3.9.x-anew:anewresty
 ARG ALPINE_IMAGE_TAG="3.9.x"
 ARG ALPINE_X_SUBNAME="openresty"
-ARG ALPINE_X_VERSION="20190701a"
-ARG ALPINE_X_MARKING="201907010000"
+ARG ALPINE_X_VERSION="20190706a"
+ARG ALPINE_X_MARKING="201907060000"
 
 
 ### RESTY_TARBALL_GETTYPE: coderesty, testresty, anewresty
@@ -88,7 +88,8 @@ ARG RESTY_NGINX_VERSION="1.15.8"
 LABEL description="Alpine ${ALPINE_IMAGE_TAG} + OpenResty(TarBall)" \
 	maintainer="Andrew Hsieh<anew7237@gmail.com>" \
 	ALPINE_X_${ALPINE_X_SUBNAME}_version="${ALPINE_X_VERSION} - ${ALPINE_X_MARKING}" \
-	ALPINE_X_${ALPINE_X_SUBNAME}_openresty="${RESTY_TARBALL_VERSION} Build from TarBall"
+	ALPINE_X_${ALPINE_X_SUBNAME}_openresty="${RESTY_TARBALL_VERSION} Build from TarBall" \
+	ALPINE_X_${ALPINE_X_SUBNAME}_redis="apk add redis"
 
 ##Standby File Copy
 RUN echo "##### ##### ##### #####" >> /_dockerDebug.log \
@@ -124,7 +125,7 @@ RUN apk add --no-cache --virtual .build-deps \
 	 else \
 		curl -fSL https://openresty.org/download/openresty-${RESTY_TARBALL_VERSION}.tar.gz -o openresty-${RESTY_TARBALL_VERSION}.tar.gz ;\
 	   fi \
-	&& tar xzf openresty-${RESTY_TARBALL_VERSION}.tar.gz \
+	&& tar -xzf openresty-${RESTY_TARBALL_VERSION}.tar.gz \
 	&& if [ "${RESTY_TARBALL_GETTYPE}" == "coderesty" ] ; then \
 		mv /x_resty/openssl-${RESTY_OPENSSL_VERSION}.tgz	./openssl-${RESTY_OPENSSL_VERSION}.tar.gz	\
 		&& sed -i "s#    . auto/lib/openssl/make.*#    . auto/lib/openssl/make.anew#g"	./openresty-${RESTY_TARBALL_VERSION}/bundle/nginx-${RESTY_NGINX_VERSION}/auto/lib/make		\
@@ -134,7 +135,7 @@ RUN apk add --no-cache --virtual .build-deps \
 	 else \
 		curl -fSL https://www.openssl.org/source/openssl-${RESTY_OPENSSL_VERSION}.tar.gz -o openssl-${RESTY_OPENSSL_VERSION}.tar.gz ;\
 	   fi \
-	&& tar xzf openssl-${RESTY_OPENSSL_VERSION}.tar.gz \
+	&& tar -xzf openssl-${RESTY_OPENSSL_VERSION}.tar.gz \
 	&& if [ "${RESTY_TARBALL_GETTYPE}" == "coderesty" ] ; then \
 		mv /x_resty/pcre-${RESTY_PCRE_VERSION}.tgz 		./pcre-${RESTY_PCRE_VERSION}.tar.gz		\
 		&& sed -i "s#    . auto/lib/pcre/make.*#    . auto/lib/pcre/make.anew#g" 	./openresty-${RESTY_TARBALL_VERSION}/bundle/nginx-${RESTY_NGINX_VERSION}/auto/lib/make		\
@@ -144,7 +145,7 @@ RUN apk add --no-cache --virtual .build-deps \
 	 else \
 		curl -fSL https://ftp.pcre.org/pub/pcre/pcre-${RESTY_PCRE_VERSION}.tar.gz -o pcre-${RESTY_PCRE_VERSION}.tar.gz ;\
 	   fi \
-	&& tar xzf pcre-${RESTY_PCRE_VERSION}.tar.gz \
+	&& tar -xzf pcre-${RESTY_PCRE_VERSION}.tar.gz \
 	&& cd /tmp/openresty-${RESTY_TARBALL_VERSION} \
 	&& if [ "${RESTY_TARBALL_GETTYPE}" != "coderesty" ] ; then \
 		echo "Patching Nginx ${RESTY_NGINX_VERSION}" \
@@ -167,8 +168,9 @@ RUN apk add --no-cache --virtual .build-deps \
 	\
 	&& mkdir -p /x_cache && chmod 777 /x_cache \
 	&& mkdir /x_cache/nginx && chmod 770 /x_cache/nginx \
-	&& addgroup -S -g 101 nginx && chown root:nginx /x_cache/nginx \
-	&& adduser -S -D -H -h /x_cache/nginx -s /bin/false -g "nginx" -G nginx -u 100 nginx \
+#	&& addgroup -S -g 102 nginx && chown root:nginx /x_cache/nginx \
+#	&& adduser -S -D -H -h /x_cache/nginx -s /bin/false -g "nginx" -G nginx -u 100 nginx \
+	&& apk add --no-cache redis \
 	&& rm -rf /x_resty \
 	&& rm -rf /var/cache/apk/*.apk && rm -rf /tmp/* && echo "$(date -u) ${ALPINE_X_MARKING} !!!DONE!!!" >> /_dockerDebug.log
 ### ### ANEW7237 END!! ### ###
@@ -191,6 +193,7 @@ STOPSIGNAL SIGQUIT
 COPY _COPY_/etc/nginx/nginx.conf 	/usr/local/openresty/nginx/conf/nginx.conf
 COPY _COPY_/etc/nginx/vh_default.conf	/etc/nginx/conf.d/vh_default.conf
 COPY _COPY_/etc/supervisor.d/nginx.ini	/etc/supervisor.d/nginx.ini
+COPY _COPY_/etc/supervisor.d/redis.ini	/etc/supervisor.d/redis.ini
 
 EXPOSE 80 443
 

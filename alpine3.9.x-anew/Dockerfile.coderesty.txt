@@ -1,10 +1,10 @@
-### https://github.com/anew7237/DOCKER-alpine3.9.x-demo/alpine3.9.x-test
+### https://github.com/anew7237/DOCKER-alpine3.9.x-demo/alpine3.9.x-anew
 
 FROM anew7237/alpine3.9.x-auto:latest
 ARG ALPINE_IMAGE_TAG="3.9.x"
 ARG ALPINE_X_SUBNAME="coderesty"
-ARG ALPINE_X_VERSION="20190701a"
-ARG ALPINE_X_MARKING="201907010000"
+ARG ALPINE_X_VERSION="20190706a"
+ARG ALPINE_X_MARKING="201907060000"
 
 
 ARG RESTY_ADD_PACKAGE_BUILDDEPS=""
@@ -15,7 +15,8 @@ LABEL description="Alpine ${ALPINE_IMAGE_TAG} + Supervisor" \
 	ALPINE_X_${ALPINE_X_SUBNAME}_version="${ALPINE_X_VERSION} - ${ALPINE_X_MARKING}" \
 	ALPINE_X_${ALPINE_X_SUBNAME}_add_package_builddeps="${RESTY_ADD_PACKAGE_BUILDDEPS}" \
 	ALPINE_X_${ALPINE_X_SUBNAME}_add_package_rundeps="${RESTY_ADD_PACKAGE_RUNDEPS}" \
-	ALPINE_X_${ALPINE_X_SUBNAME}_resty_temp="copy /x_resty/ to /x_resty/"
+	ALPINE_X_${ALPINE_X_SUBNAME}_resty_code="copy /x_resty/ to /x_resty/ & nginx diff file /x_resty/nginx-1.15.8-anew" \
+	ALPINE_X_${ALPINE_X_SUBNAME}_bind="apk add bind"
 
 RUN echo "##### ##### ##### #####" >> /_dockerDebug.log \
 	&& mkdir -p /x_script && chmod 700 /x_script \
@@ -29,6 +30,7 @@ COPY _COPY_/x_resty/pcre-8.42.tgz		/x_resty/pcre-8.42.tgz
 COPY _COPY_/x_resty/nginx-1.15.8-anew		/x_resty/nginx-1.15.8-anew
 
 RUN apk update \
+	&& apk add --no-cache bind \
     && apk add --no-cache --virtual .build-deps \
         build-base \
         coreutils \

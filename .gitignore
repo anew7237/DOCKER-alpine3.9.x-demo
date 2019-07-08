@@ -4,3 +4,4 @@
 /alpine3.9.x-anew/_COPY_/x_resty/pcre-8.42
 /alpine3.9.x-anew/_COPY_/x_resty/*.tar.gz
 /alpine3.9.x-anew/_COPY_/x_resty/*.tgz
+/alpine3.9.x-anew/_COPY_/x_resty/openresty
