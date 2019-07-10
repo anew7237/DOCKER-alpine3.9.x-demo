@@ -3,8 +3,8 @@
 FROM anew7237/alpine3.9.x-anew:anewresty
 ARG ALPINE_IMAGE_TAG="3.9.x"
 ARG ALPINE_X_SUBNAME="openresty"
-ARG ALPINE_X_VERSION="20190706a"
-ARG ALPINE_X_MARKING="201907060000"
+ARG ALPINE_X_VERSION="20190710a"
+ARG ALPINE_X_MARKING="201907100000"
 
 
 ### RESTY_TARBALL_GETTYPE: coderesty, testresty, anewresty
@@ -59,9 +59,10 @@ ARG RESTY_CONFIG_OPTIONS="\
     --with-stream \
     --with-stream_ssl_module \
     --with-threads \
+	--add-module=/tmp/replace-filter-nginx-module \
     "
 ARG RESTY_CONFIG_OPTIONS_MORE=""
-ARG RESTY_ADD_PACKAGE_BUILDDEPS=""
+ARG RESTY_ADD_PACKAGE_BUILDDEPS="git"
 ARG RESTY_ADD_PACKAGE_RUNDEPS=""
 ARG RESTY_EVAL_PRE_CONFIGURE=""
 ARG RESTY_EVAL_POST_MAKE=""
@@ -146,6 +147,28 @@ RUN apk add --no-cache --virtual .build-deps \
 		curl -fSL https://ftp.pcre.org/pub/pcre/pcre-${RESTY_PCRE_VERSION}.tar.gz -o pcre-${RESTY_PCRE_VERSION}.tar.gz ;\
 	   fi \
 	&& tar -xzf pcre-${RESTY_PCRE_VERSION}.tar.gz \
+	\
+	&& if [ "${RESTY_TARBALL_GETTYPE}" == "coderesty" ] ; then \
+		mv /x_resty/sregex.20190710.tgz		. \
+		&& tar -xzf sregex.20190710.tgz		;\
+	 elif [ "${RESTY_TARBALL_GETTYPE}" == "testresty" ] ; then \
+		mv /x_resty/sregex.20190710.tar.gz	. \
+		&& tar -xzf sregex.20190710.tar.gz	;\
+	 else \
+		git clone https://github.com/openresty/sregex.git ;\
+	   fi \
+	&& cd sregex && make && make install && cd .. \
+	\
+	&& if [ "${RESTY_TARBALL_GETTYPE}" == "coderesty" ] ; then \
+		mv /x_resty/replace-filter-nginx-module.20190710.tgz		. \
+		&& tar -xzf replace-filter-nginx-module.20190710.tgz		;\
+	 elif [ "${RESTY_TARBALL_GETTYPE}" == "testresty" ] ; then \
+		mv /x_resty/replace-filter-nginx-module.20190710.tar.gz		. \
+		&& tar -xzf replace-filter-nginx-module.20190710.tar.gz		;\
+	 else \
+		git clone https://github.com/openresty/replace-filter-nginx-module.git ;\
+	   fi \
+	\
 	&& cd /tmp/openresty-${RESTY_TARBALL_VERSION} \
 	&& if [ "${RESTY_TARBALL_GETTYPE}" != "coderesty" ] ; then \
 		echo "Patching Nginx ${RESTY_NGINX_VERSION}" \

@@ -3,8 +3,8 @@
 FROM anew7237/alpine3.9.x-auto:latest
 ARG ALPINE_IMAGE_TAG="3.9.x"
 ARG ALPINE_X_SUBNAME="anewresty"
-ARG ALPINE_X_VERSION="20190706a"
-ARG ALPINE_X_MARKING="201907060000"
+ARG ALPINE_X_VERSION="20190710a"
+ARG ALPINE_X_MARKING="201907100000"
 
 
 ARG RESTY_ADD_PACKAGE_BUILDDEPS=""
@@ -17,6 +17,7 @@ LABEL description="Alpine ${ALPINE_IMAGE_TAG} + Supervisor" \
 
 RUN echo "##### ##### ##### #####" >> /_dockerDebug.log \
 	&& mkdir -p /x_script && chmod 700 /x_script \
+	&& mkdir -p /x_resty && chmod 700 /x_resty \
 	&& echo "$(date -u) ${ALPINE_X_MARKING} Alpine${ALPINE_IMAGE_TAG}-${ALPINE_X_SUBNAME}:${ALPINE_X_VERSION}" >> /_dockerDebug.log
 
 RUN apk update \
