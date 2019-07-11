@@ -3,8 +3,8 @@
 FROM anew7237/alpine3.9.x-anew:anewresty
 ARG ALPINE_IMAGE_TAG="3.9.x"
 ARG ALPINE_X_SUBNAME="openresty"
-ARG ALPINE_X_VERSION="20190710a"
-ARG ALPINE_X_MARKING="201907100000"
+ARG ALPINE_X_VERSION="20190711a"
+ARG ALPINE_X_MARKING="201907110000"
 
 
 ### RESTY_TARBALL_GETTYPE: coderesty, testresty, anewresty
@@ -150,23 +150,36 @@ RUN apk add --no-cache --virtual .build-deps \
 	\
 	&& if [ "${RESTY_TARBALL_GETTYPE}" == "coderesty" ] ; then \
 		mv /x_resty/sregex.20190710.tgz		. \
-		&& tar -xzf sregex.20190710.tgz		;\
+		&& tar -xzf sregex.20190710.tgz		\
+		&& cd sregex && git fetch && cd /tmp/ ;\
 	 elif [ "${RESTY_TARBALL_GETTYPE}" == "testresty" ] ; then \
 		mv /x_resty/sregex.20190710.tar.gz	. \
 		&& tar -xzf sregex.20190710.tar.gz	;\
 	 else \
 		git clone https://github.com/openresty/sregex.git ;\
 	   fi \
-	&& cd sregex && make && make install && cd .. \
+	&& cd sregex && make && make install && cd /tmp/ \
 	\
 	&& if [ "${RESTY_TARBALL_GETTYPE}" == "coderesty" ] ; then \
-		mv /x_resty/replace-filter-nginx-module.20190710.tgz		. \
-		&& tar -xzf replace-filter-nginx-module.20190710.tgz		;\
+		mv /x_resty/replace-filter-nginx-module.20190711.tgz		. \
+		&& tar -xzf replace-filter-nginx-module.20190711.tgz		\
+		&& cd replace-filter-nginx-module && git fetch && cd .. ;\
 	 elif [ "${RESTY_TARBALL_GETTYPE}" == "testresty" ] ; then \
-		mv /x_resty/replace-filter-nginx-module.20190710.tar.gz		. \
-		&& tar -xzf replace-filter-nginx-module.20190710.tar.gz		;\
+		mv /x_resty/replace-filter-nginx-module.20190711.tar.gz		. \
+		&& tar -xzf replace-filter-nginx-module.20190711.tar.gz		;\
 	 else \
 		git clone https://github.com/openresty/replace-filter-nginx-module.git ;\
+	   fi \
+		\
+	&& if [ "${RESTY_TARBALL_GETTYPE}" == "coderesty" ] ; then \
+		mv /x_resty/ngx_brotli.20190711.tgz		. \
+		&& tar -xzf ngx_brotli.20190711.tgz		\
+		&& cd ngx_brotli && git fetch && cd /tmp/ ;\
+	 elif [ "${RESTY_TARBALL_GETTYPE}" == "testresty" ] ; then \
+		mv /x_resty/ngx_brotli.20190711.tar.gz		. \
+		&& tar -xzf ngx_brotli.20190711.tar.gz		;\
+	 else \
+		git clone https://github.com/google/ngx_brotli.git ;\
 	   fi \
 	\
 	&& cd /tmp/openresty-${RESTY_TARBALL_VERSION} \
@@ -189,10 +202,9 @@ RUN apk add --no-cache --virtual .build-deps \
     && ln -sf /dev/stdout /usr/local/openresty/nginx/logs/access.log \
     && ln -sf /dev/stderr /usr/local/openresty/nginx/logs/error.log \
 	\
-	&& mkdir -p /x_cache && chmod 777 /x_cache \
-	&& mkdir /x_cache/nginx && chmod 770 /x_cache/nginx \
-#	&& addgroup -S -g 102 nginx && chown root:nginx /x_cache/nginx \
-#	&& adduser -S -D -H -h /x_cache/nginx -s /bin/false -g "nginx" -G nginx -u 100 nginx \
+	&& mkdir /var/cache/nginx && chmod 770 /var/cache/nginx \
+#	&& addgroup -S -g 102 nginx && chown root:nginx /var/cache/nginx \
+#	&& adduser -S -D -H -h /var/cache/nginx -s /bin/false -g "nginx" -G nginx -u 100 nginx \
 	&& apk add --no-cache redis \
 	&& rm -rf /x_resty \
 	&& rm -rf /var/cache/apk/*.apk && rm -rf /tmp/* && echo "$(date -u) ${ALPINE_X_MARKING} !!!DONE!!!" >> /_dockerDebug.log
@@ -217,6 +229,26 @@ COPY _COPY_/etc/nginx/nginx.conf 	/usr/local/openresty/nginx/conf/nginx.conf
 COPY _COPY_/etc/nginx/vh_default.conf	/etc/nginx/conf.d/vh_default.conf
 COPY _COPY_/etc/supervisor.d/nginx.ini	/etc/supervisor.d/nginx.ini
 COPY _COPY_/etc/supervisor.d/redis.ini	/etc/supervisor.d/redis.ini
+
+
+
+# PHP Repositories for Alpine - by CODECASTS
+# https://github.com/codecasts/php-alpine
+
+COPY _COPY_/etc/apk/keys/php-alpine.rsa.pub	/etc/apk/keys/php-alpine.rsa.pub
+
+RUN apk --no-cache add ca-certificates \
+	&& mkdir -p /var/nginx-uploads 			&& chown -R nobody:nobody /var/nginx-uploads \
+	&& mkdir -p /var/cache/nginx/client_temp 	&& chown -R nobody:nobody /var/cache/nginx/client_temp \
+	&& mkdir -p /var/cache/nginx/proxy_temp		&& chown -R nobody:nobody /var/cache/nginx/proxy_temp \
+	&& mkdir -p /var/cache/nginx/fastcgi_temp	&& chown -R nobody:nobody /var/cache/nginx/fastcgi_temp \
+	&& mkdir -p /var/cache/nginx/uwsgi_temp		&& chown -R nobody:nobody /var/cache/nginx/uwsgi_temp \
+	&& mkdir -p /var/cache/nginx/scgi_temp		&& chown -R nobody:nobody /var/cache/nginx/scgi_temp \
+#	&& curl https://dl.bintray.com/php-alpine/key/php-alpine.rsa.pub -o /etc/apk/keys/php-alpine.rsa.pub \
+	&& echo "@php https://dl.bintray.com/php-alpine/v3.9/php-7.3" >> /etc/apk/repositories \
+#	&& apk add php7-mbstring php7-json php7-zlib php7-gd php7-intl php7-session php7-fpm php7-memcached \
+	&& rm -rf /var/cache/apk/*.apk && rm -rf /tmp/* && echo "$(date -u) ${ALPINE_X_MARKING} !!!DONE!!!" >> /_dockerDebug.log
+
 
 EXPOSE 80 443
 

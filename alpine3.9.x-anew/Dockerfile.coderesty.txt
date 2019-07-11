@@ -3,8 +3,8 @@
 FROM anew7237/alpine3.9.x-auto:latest
 ARG ALPINE_IMAGE_TAG="3.9.x"
 ARG ALPINE_X_SUBNAME="coderesty"
-ARG ALPINE_X_VERSION="20190710a"
-ARG ALPINE_X_MARKING="201907100000"
+ARG ALPINE_X_VERSION="20190711a"
+ARG ALPINE_X_MARKING="201907110000"
 
 
 ARG RESTY_ADD_PACKAGE_BUILDDEPS="git"
@@ -23,8 +23,9 @@ RUN echo "##### ##### ##### #####" >> /_dockerDebug.log \
 	&& mkdir -p /x_resty && chmod 700 /x_resty \
 	&& echo "$(date -u) ${ALPINE_X_MARKING} Alpine${ALPINE_IMAGE_TAG}-${ALPINE_X_SUBNAME}:${ALPINE_X_VERSION}" >> /_dockerDebug.log
 
-COPY _COPY_/x_resty/sregex.20190710.tgz					/x_resty/sregex.20190710.tgz
-COPY _COPY_/x_resty/replace-filter-nginx-module.20190710.tgz		/x_resty/replace-filter-nginx-module.20190710.tgz
+COPY _COPY_/x_resty/sregex.20190711.tgz					/x_resty/sregex.20190711.tgz
+COPY _COPY_/x_resty/replace-filter-nginx-module.20190711.tgz		/x_resty/replace-filter-nginx-module.20190711.tgz
+COPY _COPY_/x_resty/ngx_brotli.20190711.tgz				/x_resty/ngx_brotli.20190711.tgz
 COPY _COPY_/x_script/*				/x_script/
 COPY _COPY_/x_resty/openresty-1.15.8.1.tgz	/x_resty/openresty-1.15.8.1.tgz
 COPY _COPY_/x_resty/openssl-1.1.1c.tgz		/x_resty/openssl-1.1.1c.tgz

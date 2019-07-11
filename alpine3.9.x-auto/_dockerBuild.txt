@@ -1,14 +1,14 @@
 ## BUILD
-docker build --force-rm -t anew7237/alpine3.9.x-auto:20190701a . > _dockerBuild.log
-docker inspect anew7237/alpine3.9.x-auto:20190701a >> _dockerBuild.log
+docker build --force-rm -t anew7237/alpine3.9.x-auto:20190711a . > _dockerBuild.log
+docker inspect anew7237/alpine3.9.x-auto:20190711a >> _dockerBuild.log
 
 ## RUN & TEST
-docker run -dt -p 32022:22 --name alpine3.9.x-auto1 anew7237/alpine3.9.x-auto:20190701a
+docker run -dt -p 32022:22 --name alpine3.9.x-auto1 anew7237/alpine3.9.x-auto:20190711a
 docker exec -it alpine3.9.x-auto1 sh
 ##### ssh login to localhost:32022 #####
 docker kill alpine3.9.x-auto1
 docker rm alpine3.9.x-auto1
-docker rmi anew7237/alpine3.9.x-auto:20190701a
+docker rmi anew7237/alpine3.9.x-auto:20190711a
 
 ## Tag to latest
-docker tag anew7237/alpine3.9.x-auto:20190701a anew7237/alpine3.9.x-auto:latest
+docker tag anew7237/alpine3.9.x-auto:20190711a anew7237/alpine3.9.x-auto:latest
