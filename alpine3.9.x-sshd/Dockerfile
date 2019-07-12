@@ -3,8 +3,8 @@
 FROM alpine:3.9.4
 ARG ALPINE_IMAGE_TAG="3.9.4"
 ARG ALPINE_X_SUBNAME="sshd"
-ARG ALPINE_X_VERSION="20190701a"
-ARG ALPINE_X_MARKING="2019070100"
+ARG ALPINE_X_VERSION="20190712a"
+ARG ALPINE_X_MARKING="2019071200"
 
 LABEL description="Alpine ${ALPINE_IMAGE_TAG} + Openssh Server" \
 	maintainer="Andrew Hsieh<anew7237@gmail.com>" \
@@ -31,7 +31,7 @@ RUN apk update \
 	&& for t in rsa ecdsa ed25519 ; do ssh-keygen -t $t -C root -P '' -f /etc/ssh/ssh_host_${t}_key ; done \
 	&& sed -i "s/#PermitRootLogin .*/PermitRootLogin yes/g" /etc/ssh/sshd_config \
 	&& sed -i "s/#PubkeyAuthentication .*/PubkeyAuthentication yes/g" /etc/ssh/sshd_config \
-#	&& sed -i "s/#PasswordAuthentication .*/PasswordAuthentication no/g" /etc/ssh/sshd_config \
+	&& sed -i "s/#PasswordAuthentication .*/PasswordAuthentication yes/g" /etc/ssh/sshd_config \
 	&& sed -i "s/#ChallengeResponseAuthentication .*/ChallengeResponseAuthentication no/g" /etc/ssh/sshd_config \
 #	&& echo "Protocol 2" >> /etc/ssh/sshd_config \
 #	&& echo "HostKeyAlgorithms ecdsa-sha2-nistp256-cert-v01@openssh.com,ecdsa-sha2-nistp384-cert-v01@openssh.com,ecdsa-sha2-nistp521-cert-v01@openssh.com,ssh-ed25519-cert-v01@openssh.com,rsa-sha2-512-cert-v01@openssh.com,rsa-sha2-256-cert-v01@openssh.com,ssh-rsa-cert-v01@openssh.com,ecdsa-sha2-nistp256,ecdsa-sha2-nistp384,ecdsa-sha2-nistp521,ssh-ed25519,rsa-sha2-512,rsa-sha2-256,ssh-rsa" >> /etc/ssh/sshd_config \
@@ -42,7 +42,6 @@ RUN apk update \
 	&& apk add --no-cache openssl \
 	&& echo "root:$(openssl passwd -1 -salt $(date -u '+%m%d%H%M') 'asdf456qwer789')" > /tmp/root.pwd \
 	&& cat /tmp/root.pwd | chpasswd -e && passwd -l root \
-#	&& echo "root:asdf456qwer789" | chpasswd && passwd -l root \
 	&& mkdir -p /root/.ssh && chmod 700 /root/.ssh \
 	&& touch /root/.ssh/authorized_keys && chmod 600 /root/.ssh/authorized_keys \
 	&& cat /root/id_ed25519.pub >> /root/.ssh/authorized_keys && rm -f /root/id_ed25519.pub \

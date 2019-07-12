@@ -3,8 +3,8 @@
 FROM anew7237/alpine3.9.x-auto:latest
 ARG ALPINE_IMAGE_TAG="3.9.x"
 ARG ALPINE_X_SUBNAME="coderesty"
-ARG ALPINE_X_VERSION="20190711a"
-ARG ALPINE_X_MARKING="201907110000"
+ARG ALPINE_X_VERSION="20190712a"
+ARG ALPINE_X_MARKING="201907120000"
 
 
 ARG RESTY_ADD_PACKAGE_BUILDDEPS="git"
@@ -16,7 +16,7 @@ LABEL description="Alpine ${ALPINE_IMAGE_TAG} + Supervisor" \
 	ALPINE_X_${ALPINE_X_SUBNAME}_add_package_builddeps="${RESTY_ADD_PACKAGE_BUILDDEPS}" \
 	ALPINE_X_${ALPINE_X_SUBNAME}_add_package_rundeps="${RESTY_ADD_PACKAGE_RUNDEPS}" \
 	ALPINE_X_${ALPINE_X_SUBNAME}_resty_code="copy /x_resty/ to /x_resty/ & nginx diff file /x_resty/nginx-1.15.8-anew" \
-	ALPINE_X_${ALPINE_X_SUBNAME}_bind="apk add bind"
+	ALPINE_X_${ALPINE_X_SUBNAME}_git="apk add git"
 
 RUN echo "##### ##### ##### #####" >> /_dockerDebug.log \
 	&& mkdir -p /x_script && chmod 700 /x_script \
@@ -33,7 +33,7 @@ COPY _COPY_/x_resty/pcre-8.42.tgz		/x_resty/pcre-8.42.tgz
 COPY _COPY_/x_resty/nginx-1.15.8-anew		/x_resty/nginx-1.15.8-anew
 
 RUN apk update \
-	&& apk add --no-cache bind \
+	&& apk add --no-cache git \
     && apk add --no-cache --virtual .build-deps \
         build-base \
         coreutils \

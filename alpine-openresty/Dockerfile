@@ -3,8 +3,8 @@
 FROM anew7237/alpine3.9.x-anew:anewresty
 ARG ALPINE_IMAGE_TAG="3.9.x"
 ARG ALPINE_X_SUBNAME="openresty"
-ARG ALPINE_X_VERSION="20190711a"
-ARG ALPINE_X_MARKING="201907110000"
+ARG ALPINE_X_VERSION="20190712a"
+ARG ALPINE_X_MARKING="201907120000"
 
 
 ### RESTY_TARBALL_GETTYPE: coderesty, testresty, anewresty
@@ -92,7 +92,6 @@ LABEL description="Alpine ${ALPINE_IMAGE_TAG} + OpenResty(TarBall)" \
 	ALPINE_X_${ALPINE_X_SUBNAME}_openresty="${RESTY_TARBALL_VERSION} Build from TarBall" \
 	ALPINE_X_${ALPINE_X_SUBNAME}_redis="apk add redis"
 
-##Standby File Copy
 RUN echo "##### ##### ##### #####" >> /_dockerDebug.log \
 	&& echo "$(date -u) ${ALPINE_X_MARKING} Alpine${ALPINE_IMAGE_TAG}-${ALPINE_X_SUBNAME}:${ALPINE_X_VERSION}" >> /_dockerDebug.log
 
@@ -149,12 +148,12 @@ RUN apk add --no-cache --virtual .build-deps \
 	&& tar -xzf pcre-${RESTY_PCRE_VERSION}.tar.gz \
 	\
 	&& if [ "${RESTY_TARBALL_GETTYPE}" == "coderesty" ] ; then \
-		mv /x_resty/sregex.20190710.tgz		. \
-		&& tar -xzf sregex.20190710.tgz		\
+		mv /x_resty/sregex.20190711.tgz		. \
+		&& tar -xzf sregex.20190711.tgz		\
 		&& cd sregex && git fetch && cd /tmp/ ;\
 	 elif [ "${RESTY_TARBALL_GETTYPE}" == "testresty" ] ; then \
-		mv /x_resty/sregex.20190710.tar.gz	. \
-		&& tar -xzf sregex.20190710.tar.gz	;\
+		mv /x_resty/sregex.20190711.tar.gz	. \
+		&& tar -xzf sregex.20190711.tar.gz	;\
 	 else \
 		git clone https://github.com/openresty/sregex.git ;\
 	   fi \
@@ -225,10 +224,10 @@ STOPSIGNAL SIGQUIT
 
 
 ### ### ANEW7237 START ### ###
-COPY _COPY_/etc/nginx/nginx.conf 	/usr/local/openresty/nginx/conf/nginx.conf
-COPY _COPY_/etc/nginx/vh_default.conf	/etc/nginx/conf.d/vh_default.conf
-COPY _COPY_/etc/supervisor.d/nginx.ini	/etc/supervisor.d/nginx.ini
-COPY _COPY_/etc/supervisor.d/redis.ini	/etc/supervisor.d/redis.ini
+COPY _COPY_/etc/nginx/nginx.conf 		/usr/local/openresty/nginx/conf/nginx.conf
+COPY _COPY_/etc/nginx/vh_default.conf		/etc/nginx/conf.d/vh_default.conf
+COPY _COPY_/etc/supervisor.d/20-redis.ini	/etc/supervisor.d/20-redis.ini
+COPY _COPY_/etc/supervisor.d/40-nginx.ini	/etc/supervisor.d/40-nginx.ini
 
 
 

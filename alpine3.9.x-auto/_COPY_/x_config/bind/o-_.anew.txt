@@ -1,0 +1,15 @@
+;; 2019/07/12 00:00 by anew
+$ORIGIN anew.
+$TTL 300
+@			IN	NS	ns.anew.
+@			IN	SOA	ns.anew. nobody.anew. (
+			2019070700	; serial
+			300		; refresh
+			300		; retry
+			300		; expire
+			300	)	; minimum
+
+@			IN	A	127.0.0.1
+ns			IN	A	127.0.0.1
+
+hello			IN	A	127.0.0.88

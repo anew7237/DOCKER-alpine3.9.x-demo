@@ -1,0 +1,3 @@
+
+zone "anew" {		type master; file "o-_.anew.txt"; };
+
