@@ -3,8 +3,8 @@
 FROM alpine:3.9.4
 ARG ALPINE_IMAGE_TAG="3.9.4"
 ARG ALPINE_X_SUBNAME="sshd"
-ARG ALPINE_X_VERSION="20190712a"
-ARG ALPINE_X_MARKING="2019071200"
+ARG ALPINE_X_VERSION="20190716a"
+ARG ALPINE_X_MARKING="2019071600"
 
 LABEL description="Alpine ${ALPINE_IMAGE_TAG} + Openssh Server" \
 	maintainer="Andrew Hsieh<anew7237@gmail.com>" \
@@ -33,11 +33,6 @@ RUN apk update \
 	&& sed -i "s/#PubkeyAuthentication .*/PubkeyAuthentication yes/g" /etc/ssh/sshd_config \
 	&& sed -i "s/#PasswordAuthentication .*/PasswordAuthentication yes/g" /etc/ssh/sshd_config \
 	&& sed -i "s/#ChallengeResponseAuthentication .*/ChallengeResponseAuthentication no/g" /etc/ssh/sshd_config \
-#	&& echo "Protocol 2" >> /etc/ssh/sshd_config \
-#	&& echo "HostKeyAlgorithms ecdsa-sha2-nistp256-cert-v01@openssh.com,ecdsa-sha2-nistp384-cert-v01@openssh.com,ecdsa-sha2-nistp521-cert-v01@openssh.com,ssh-ed25519-cert-v01@openssh.com,rsa-sha2-512-cert-v01@openssh.com,rsa-sha2-256-cert-v01@openssh.com,ssh-rsa-cert-v01@openssh.com,ecdsa-sha2-nistp256,ecdsa-sha2-nistp384,ecdsa-sha2-nistp521,ssh-ed25519,rsa-sha2-512,rsa-sha2-256,ssh-rsa" >> /etc/ssh/sshd_config \
-#	&& echo "KexAlgorithms curve25519-sha256,curve25519-sha256@libssh.org,ecdh-sha2-nistp256,ecdh-sha2-nistp384,ecdh-sha2-nistp521,diffie-hellman-group-exchange-sha256,diffie-hellman-group16-sha512,diffie-hellman-group18-sha512,diffie-hellman-group14-sha256,diffie-hellman-group14-sha1" >> /etc/ssh/sshd_config \
-#	&& echo "Ciphers chacha20-poly1305@openssh.com,aes256-gcm@openssh.com,aes128-gcm@openssh.com,aes256-ctr,aes192-ctr,aes128-ctr" >> /etc/ssh/sshd_config \
-#	&& echo "MACs umac-64-etm@openssh.com,umac-128-etm@openssh.com,hmac-sha2-256-etm@openssh.com,hmac-sha2-512-etm@openssh.com,hmac-sha1-etm@openssh.com,umac-64@openssh.com,umac-128@openssh.com,hmac-sha2-256,hmac-sha2-512,hmac-sha1" >> /etc/ssh/sshd_config \
 	&& echo "StrictHostKeyChecking no" >> /etc/ssh/ssh_config \
 	&& apk add --no-cache openssl \
 	&& echo "root:$(openssl passwd -1 -salt $(date -u '+%m%d%H%M') 'asdf456qwer789')" > /tmp/root.pwd \

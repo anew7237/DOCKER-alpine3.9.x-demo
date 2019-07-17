@@ -3,8 +3,8 @@
 FROM anew7237/alpine3.9.x-sshd:latest
 ARG ALPINE_IMAGE_TAG="3.9.x"
 ARG ALPINE_X_SUBNAME="auto"
-ARG ALPINE_X_VERSION="20190712a"
-ARG ALPINE_X_MARKING="201907120000"
+ARG ALPINE_X_VERSION="20190716a"
+ARG ALPINE_X_MARKING="201907160000"
 
 LABEL description="Alpine ${ALPINE_IMAGE_TAG} + Supervisor" \
 	maintainer="Andrew Hsieh<anew7237@gmail.com>" \
@@ -42,9 +42,5 @@ RUN apk update \
 	&& rm -rf /var/cache/apk/*.apk && rm -rf /tmp/* && echo "$(date -u) ${ALPINE_X_MARKING} !!!DONE!!!" >> /_dockerDebug.log
 
 EXPOSE 53/udp
-
-#ENTRYPOINT ["/x_script/root.sh"]
-
-#CMD ["/usr/bin/supervisord", "-c", "/etc/supervisord.conf"]
 
 CMD ["/x_script/root.sh"]

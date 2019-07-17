@@ -1,10 +1,10 @@
-### https://github.com/anew7237/DOCKER-alpine3.9.x-demo/alpine3.9.x-sshd
+### https://github.com/anew7237/DOCKER-alpine3.9.x-demo/alpine-openresty
 
 FROM anew7237/alpine3.9.x-anew:anewresty
 ARG ALPINE_IMAGE_TAG="3.9.x"
 ARG ALPINE_X_SUBNAME="openresty"
-ARG ALPINE_X_VERSION="20190712a"
-ARG ALPINE_X_MARKING="201907120000"
+ARG ALPINE_X_VERSION="20190716a"
+ARG ALPINE_X_MARKING="201907160000"
 
 
 ### RESTY_TARBALL_GETTYPE: coderesty, testresty, anewresty
@@ -60,9 +60,14 @@ ARG RESTY_CONFIG_OPTIONS="\
     --with-stream_ssl_module \
     --with-threads \
 	--add-module=/tmp/replace-filter-nginx-module \
+	--http-proxy-temp-path=/x_husers/proxy_temp \
+	--http-client-body-temp-path=/x_husers/client_temp \
+	--http-fastcgi-temp-path=/x_husers/fastcgi_temp \
+	--http-uwsgi-temp-path=/x_husers/uwsgi_temp \
+	--http-scgi-temp-path=/x_husers/scgi_temp \
     "
 ARG RESTY_CONFIG_OPTIONS_MORE=""
-ARG RESTY_ADD_PACKAGE_BUILDDEPS="git"
+ARG RESTY_ADD_PACKAGE_BUILDDEPS=""
 ARG RESTY_ADD_PACKAGE_RUNDEPS=""
 ARG RESTY_EVAL_PRE_CONFIGURE=""
 ARG RESTY_EVAL_POST_MAKE=""
@@ -93,7 +98,26 @@ LABEL description="Alpine ${ALPINE_IMAGE_TAG} + OpenResty(TarBall)" \
 	ALPINE_X_${ALPINE_X_SUBNAME}_redis="apk add redis"
 
 RUN echo "##### ##### ##### #####" >> /_dockerDebug.log \
+	&& mkdir -p /x_htdocs && chmod 775 /x_htdocs \
+	&& mkdir -p /x_husers && chmod 775 /x_husers \
+	&& mkdir -p /x_husers/proxy_temp \
+	&& mkdir -p /x_husers/client_temp \
+	&& mkdir -p /x_husers/fastcgi_temp \
+	&& mkdir -p /x_husers/uwsgi_temp \
+	&& mkdir -p /x_husers/scgi_temp \
+	&& mkdir -p /x_husers/nginx_logs \
+	&& addgroup -S -g 990 husers \
+	&& adduser -S -D -H -h /x_husers -s /bin/false -g "nginx" -G husers -u 991 nginx \
+	&& chmod 770 /x_husers/* && chown -R nginx:husers /x_husers \
+	&& mkdir -p /etc/nginx/conf && chmod 775 /etc/nginx/conf \
+	&& mkdir -p /etc/nginx/conf.d && chmod 775 /etc/nginx/conf.d \
 	&& echo "$(date -u) ${ALPINE_X_MARKING} Alpine${ALPINE_IMAGE_TAG}-${ALPINE_X_SUBNAME}:${ALPINE_X_VERSION}" >> /_dockerDebug.log
+
+COPY _COPY_/x_htdocs/default			/x_htdocs/default
+COPY _COPY_/etc/nginx/conf/* 			/etc/nginx/conf/
+COPY _COPY_/etc/nginx/conf.d/*			/etc/nginx/conf.d/
+COPY _COPY_/etc/supervisor.d/20-redis.ini	/etc/supervisor.d/20-redis.ini
+COPY _COPY_/etc/supervisor.d/40-nginx.ini	/etc/supervisor.d/40-nginx.ini
 
 RUN apk add --no-cache --virtual .build-deps \
         build-base \
@@ -201,9 +225,6 @@ RUN apk add --no-cache --virtual .build-deps \
     && ln -sf /dev/stdout /usr/local/openresty/nginx/logs/access.log \
     && ln -sf /dev/stderr /usr/local/openresty/nginx/logs/error.log \
 	\
-	&& mkdir /var/cache/nginx && chmod 770 /var/cache/nginx \
-#	&& addgroup -S -g 102 nginx && chown root:nginx /var/cache/nginx \
-#	&& adduser -S -D -H -h /var/cache/nginx -s /bin/false -g "nginx" -G nginx -u 100 nginx \
 	&& apk add --no-cache redis \
 	&& rm -rf /x_resty \
 	&& rm -rf /var/cache/apk/*.apk && rm -rf /tmp/* && echo "$(date -u) ${ALPINE_X_MARKING} !!!DONE!!!" >> /_dockerDebug.log
@@ -224,33 +245,8 @@ STOPSIGNAL SIGQUIT
 
 
 ### ### ANEW7237 START ### ###
-COPY _COPY_/etc/nginx/nginx.conf 		/usr/local/openresty/nginx/conf/nginx.conf
-COPY _COPY_/etc/nginx/vh_default.conf		/etc/nginx/conf.d/vh_default.conf
-COPY _COPY_/etc/supervisor.d/20-redis.ini	/etc/supervisor.d/20-redis.ini
-COPY _COPY_/etc/supervisor.d/40-nginx.ini	/etc/supervisor.d/40-nginx.ini
 
-
-
-# PHP Repositories for Alpine - by CODECASTS
-# https://github.com/codecasts/php-alpine
-
-COPY _COPY_/etc/apk/keys/php-alpine.rsa.pub	/etc/apk/keys/php-alpine.rsa.pub
-
-RUN apk --no-cache add ca-certificates \
-	&& mkdir -p /var/nginx-uploads 			&& chown -R nobody:nobody /var/nginx-uploads \
-	&& mkdir -p /var/cache/nginx/client_temp 	&& chown -R nobody:nobody /var/cache/nginx/client_temp \
-	&& mkdir -p /var/cache/nginx/proxy_temp		&& chown -R nobody:nobody /var/cache/nginx/proxy_temp \
-	&& mkdir -p /var/cache/nginx/fastcgi_temp	&& chown -R nobody:nobody /var/cache/nginx/fastcgi_temp \
-	&& mkdir -p /var/cache/nginx/uwsgi_temp		&& chown -R nobody:nobody /var/cache/nginx/uwsgi_temp \
-	&& mkdir -p /var/cache/nginx/scgi_temp		&& chown -R nobody:nobody /var/cache/nginx/scgi_temp \
-#	&& curl https://dl.bintray.com/php-alpine/key/php-alpine.rsa.pub -o /etc/apk/keys/php-alpine.rsa.pub \
-	&& echo "@php https://dl.bintray.com/php-alpine/v3.9/php-7.3" >> /etc/apk/repositories \
-#	&& apk add php7-mbstring php7-json php7-zlib php7-gd php7-intl php7-session php7-fpm php7-memcached \
-	&& rm -rf /var/cache/apk/*.apk && rm -rf /tmp/* && echo "$(date -u) ${ALPINE_X_MARKING} !!!DONE!!!" >> /_dockerDebug.log
-
+# Test Nginx
+RUN nginx -c /etc/nginx/conf/nginx.conf -t
 
 EXPOSE 80 443
-
-ENTRYPOINT ["/x_script/root.sh"]
-
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisord.conf"]

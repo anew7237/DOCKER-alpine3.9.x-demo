@@ -3,14 +3,14 @@
 FROM anew7237/alpine3.9.x-auto:latest
 ARG ALPINE_IMAGE_TAG="3.9.x"
 ARG ALPINE_X_SUBNAME="coderesty"
-ARG ALPINE_X_VERSION="20190712a"
-ARG ALPINE_X_MARKING="201907120000"
+ARG ALPINE_X_VERSION="20190716a"
+ARG ALPINE_X_MARKING="201907160000"
 
 
-ARG RESTY_ADD_PACKAGE_BUILDDEPS="git"
+ARG RESTY_ADD_PACKAGE_BUILDDEPS=""
 ARG RESTY_ADD_PACKAGE_RUNDEPS=""
 
-LABEL description="Alpine ${ALPINE_IMAGE_TAG} + Supervisor" \
+LABEL description="Alpine ${ALPINE_IMAGE_TAG} + AnewPackage" \
 	maintainer="Andrew Hsieh<anew7237@gmail.com>" \
 	ALPINE_X_${ALPINE_X_SUBNAME}_version="${ALPINE_X_VERSION} - ${ALPINE_X_MARKING}" \
 	ALPINE_X_${ALPINE_X_SUBNAME}_add_package_builddeps="${RESTY_ADD_PACKAGE_BUILDDEPS}" \
@@ -19,14 +19,12 @@ LABEL description="Alpine ${ALPINE_IMAGE_TAG} + Supervisor" \
 	ALPINE_X_${ALPINE_X_SUBNAME}_git="apk add git"
 
 RUN echo "##### ##### ##### #####" >> /_dockerDebug.log \
-	&& mkdir -p /x_script && chmod 700 /x_script \
 	&& mkdir -p /x_resty && chmod 700 /x_resty \
 	&& echo "$(date -u) ${ALPINE_X_MARKING} Alpine${ALPINE_IMAGE_TAG}-${ALPINE_X_SUBNAME}:${ALPINE_X_VERSION}" >> /_dockerDebug.log
 
 COPY _COPY_/x_resty/sregex.20190711.tgz					/x_resty/sregex.20190711.tgz
 COPY _COPY_/x_resty/replace-filter-nginx-module.20190711.tgz		/x_resty/replace-filter-nginx-module.20190711.tgz
 COPY _COPY_/x_resty/ngx_brotli.20190711.tgz				/x_resty/ngx_brotli.20190711.tgz
-COPY _COPY_/x_script/*				/x_script/
 COPY _COPY_/x_resty/openresty-1.15.8.1.tgz	/x_resty/openresty-1.15.8.1.tgz
 COPY _COPY_/x_resty/openssl-1.1.1c.tgz		/x_resty/openssl-1.1.1c.tgz
 COPY _COPY_/x_resty/pcre-8.42.tgz		/x_resty/pcre-8.42.tgz
