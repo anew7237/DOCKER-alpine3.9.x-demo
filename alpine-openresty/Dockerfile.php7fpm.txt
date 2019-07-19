@@ -1,10 +1,10 @@
 ### https://github.com/anew7237/DOCKER-alpine3.9.x-demo/alpine-openresty
 
-FROM anew7237/alpine-openresty:20190716a
+FROM anew7237/alpine-openresty:20190718a
 ARG ALPINE_IMAGE_TAG="3.9.x"
 ARG ALPINE_X_SUBNAME="php7resty"
-ARG ALPINE_X_VERSION="20190716a"
-ARG ALPINE_X_MARKING="201907160000"
+ARG ALPINE_X_VERSION="20190718a"
+ARG ALPINE_X_MARKING="201907180000"
 
 
 ARG PHP7_MODULES="\
@@ -110,6 +110,7 @@ RUN echo "##### ##### ##### #####" >> /_dockerDebug.log \
 	&& echo "$(date -u) ${ALPINE_X_MARKING} Alpine${ALPINE_IMAGE_TAG}-${ALPINE_X_SUBNAME}:${ALPINE_X_VERSION}" >> /_dockerDebug.log
 
 COPY _COPY_/x_script/*				/x_script/
+COPY _COPY_/x_config/php.evn			/x_config/php.evn
 COPY _COPY_/etc/php/php.ini			/etc/php/php.ini
 COPY _COPY_/etc/php/fpm.ini			/etc/php/fpm.ini
 COPY _COPY_/etc/php/fpm.d/9000.ini		/etc/php/fpm.d/9000.ini

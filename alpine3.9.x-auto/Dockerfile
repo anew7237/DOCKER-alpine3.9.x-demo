@@ -3,8 +3,8 @@
 FROM anew7237/alpine3.9.x-sshd:latest
 ARG ALPINE_IMAGE_TAG="3.9.x"
 ARG ALPINE_X_SUBNAME="auto"
-ARG ALPINE_X_VERSION="20190716a"
-ARG ALPINE_X_MARKING="201907160000"
+ARG ALPINE_X_VERSION="20190718a"
+ARG ALPINE_X_MARKING="201907180000"
 
 LABEL description="Alpine ${ALPINE_IMAGE_TAG} + Supervisor" \
 	maintainer="Andrew Hsieh<anew7237@gmail.com>" \
@@ -20,14 +20,14 @@ LABEL description="Alpine ${ALPINE_IMAGE_TAG} + Supervisor" \
 RUN echo "##### ##### ##### #####" >> /_dockerDebug.log \
 	&& mkdir -p /x_script && chmod 700 /x_script \
 	&& mkdir -p /x_config && chmod 700 /x_config \
-	&& mkdir -p /x_config/bind \
+	&& mkdir -p /x_config/etc && mkdir -p /x_config/bind \
 	&& echo "$(date -u) ${ALPINE_X_MARKING} Alpine${ALPINE_IMAGE_TAG}-${ALPINE_X_SUBNAME}:${ALPINE_X_VERSION}" >> /_dockerDebug.log
 
 COPY _COPY_/x_script/*				/x_script/
 COPY _COPY_/x_config/bind/*			/x_config/bind/
 COPY _COPY_/etc/crontabs/root			/etc/crontabs/root
 COPY _COPY_/etc/supervisor.d/00-root.ini	/etc/supervisor.d/00-root.ini
-COPY _COPY_/etc/supervisor.d/05-named.ini	/etc/supervisor.d/05-named.ini
+COPY _COPY_/etc/supervisor.d/05-bind.ini	/etc/supervisor.d/05-bind.ini
 COPY _COPY_/etc/supervisor.d/10-sshd.ini	/etc/supervisor.d/10-sshd.ini
 COPY _COPY_/etc/supervisor.d/50-crond.ini	/etc/supervisor.d/50-crond.ini
 

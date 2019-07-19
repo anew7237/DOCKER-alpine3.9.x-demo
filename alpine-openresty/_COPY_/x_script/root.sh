@@ -1,177 +1,109 @@
 #!/bin/sh
 
-set -xe
+set -e
+#set -x
 
 echo "root.sh START"
 
-if [ -f /x_script/etc/resolv.conf ] && [ "$(cat /x_script/etc/resolv.conf | grep '###ANEW:')" != "$(cat /etc/resolv.conf | grep '###ANEW:')" ]  ; then
-	cat /x_script/etc/resolv.conf > /etc/resolv.conf
+
+### Resolv & Bind9 Reset
+ANEW_DATETIME_STRING=`date +"%Y-%m-%dT%H:%M:%SZ"`
+if [ ! -f /etc/resolv.conf.docker ] ; then
+	cp /etc/resolv.conf /etc/resolv.conf.docker
+	echo "###ANEW:$ANEW_DATETIME_STRING" > /etc/resolv.conf
+	echo 'nameserver 127.0.0.1' >> /etc/resolv.conf
+	echo 'options single-request-reopen' >> /etc/resolv.conf
+	if [ ! -f /x_config/etc/resolv.conf ] ; then 
+		cp /etc/resolv.conf /x_config/etc/resolv.conf
+	fi
+
+	ANEW_NAMESERVER_DOCKER=`grep '^nameserver ' /etc/resolv.conf.docker | sed -e 's#nameserver##g' | sed -e 's# ##g'`
+	sed -i -e "s#forwarders { 127.0.0.11; };#forwarders { $ANEW_NAMESERVER_DOCKER; };#g" /var/bind/bind.conf
 fi
-
-echo "root.sh End!!"
-
+printf "%-30s %-30s\n" "Bind9 Forwarders:" "`cat /var/bind/bind.conf | grep forwarders`"
 
 
-set +e
-
-printf "\n\033[1;1mRunning Nginx PHP-FPM web mode\033[0m\n\n"
-
-# printf "%-30s %-30s\n" "Key" "Value"
-
-# Container info:
-printf "%-30s %-30s\n" "Site:" "$SITE_NAME"
-if [ ! -z "$SITE_NAME" ]; then SITE_NAME="TEST_NAME" ;fi
-
-printf "%-30s %-30s\n" "Branch:" "$SITE_BRANCH"
-if [ ! -z "$SITE_BRANCH" ]; then SITE_NAME="TEST_BRANCH" ;fi
-
-printf "%-30s %-30s\n" "Environment:" "$ENVIRONMENT"
-if [ ! -z "$ENVIRONMENT" ]; then ENVIRONMENT="qa" ;fi
-
-# Enable Nginx
-#cp /etc/supervisor.d/nginx.conf /etc/supervisord-enabled/
-
-# Enable PHP-FPM
-#cp /etc/supervisor.d/php-fpm.conf /etc/supervisord-enabled/
-
-# Whether to send cache headers automatically for PHP scripts
-if [ ! -z "$PHP_DISABLE_CACHE_HEADERS" ]; then
-    sed -i -e "s#session.cache_limiter = nocache#session.cache_limiter = ''#g" /etc/php/php.ini
+### Resolv Sync Form /x_config/etc/resolv.conf
+if [ -f /x_config/etc/resolv.conf ] && [ "$(cat /x_config/etc/resolv.conf | grep '###ANEW:')" != "$(cat /etc/resolv.conf | grep '###ANEW:')" ]  ; then
+	cat /x_config/etc/resolv.conf > /etc/resolv.conf
 fi
+printf "%-30s %-30s\n" "Resolv (/etc/resolv.conf):"
+cat /etc/resolv.conf
 
-# Version numbers:
+
+### PHP and Nginx Version:
+if [ ! -f /x_config/php.evn ]; then echo "###ANEW:$ANEW_DATETIME_STRING" > /x_config/php.evn ; fi
+printf "%-30s %-30s\n" "Nginx Version:" "`/usr/local/openresty/nginx/sbin/nginx -v 2>&1 | sed -e 's/nginx version: nginx\///g'`"
 printf "%-30s %-30s\n" "PHP Version:" "`php -r 'echo phpversion();'`"
-printf "%-30s %-30s\n" "Nginx Version:" "`/usr/sbin/nginx -v 2>&1 | sed -e 's/nginx version: nginx\///g'`"
 
 
-# PHP Max Memory
-# If set
-if [ ! -z "$PHP_MEMORY_MAX" ]; then
-    # Set PHP.ini accordingly
-    sed -i -e "s#memory_limit = 128M#memory_limit = ${PHP_MEMORY_MAX}M#g" /etc/php/php.ini
+### PHP Max Memory Limit
+PHP_MAX_MEMORY_LIMIT=`grep '^PHP_MAX_MEMORY_LIMIT=' /x_config/php.evn | sed -e 's#PHP_MAX_MEMORY_LIMIT=##g' | sed -e 's# ##g'`
+if [ ! -z "$PHP_MAX_MEMORY_LIMIT" ]; then
+	sed -i -e "s#memory_limit = 128M#memory_limit = ${PHP_MAX_MEMORY_LIMIT}M#g" /etc/php/php.ini
 fi
+printf "%-30s %-30s\n" "PHP Max Memory Limit:" "`php -r 'echo ini_get("memory_limit");'`"
 
-# Print the real value
-printf "%-30s %-30s\n" "PHP Memory Max:" "`php -r 'echo ini_get("memory_limit");'`"
 
-# PHP Opcache
-# If not set
-if [ -z "$DISABLE_OPCACHE" ]; then
-    printf "%-30s %-30s\n" "PHP Opcache:" "Enabled"
+### PHP Max Execution Time
+PHP_MAX_EXECUTION_TIME=`grep '^PHP_MAX_EXECUTION_TIME=' /x_config/php.evn | sed -e 's#PHP_MAX_EXECUTION_TIME=##g' | sed -e 's# ##g'`
+if [ ! -z "$PHP_MAX_EXECUTION_TIME" ]; then
+	sed -i -e "s#max_execution_time = 600#max_execution_time = ${PHP_MAX_EXECUTION_TIME}#g" /etc/php/php.ini
 
+	# Modify the nginx read timeout
+	sed -i -e "s#fastcgi_read_timeout 600s;#fastcgi_read_timeout ${PHP_MAX_EXECUTION_TIME}s;#g" /etc/nginx/conf.d/vh_default.conf
 fi
-# If set
-if [ ! -z "$DISABLE_OPCACHE" ]; then
-    printf "%-30s %-30s\n" "PHP Opcache:" "Disabled"
-    # Set PHP.ini accordingly
-    sed -i -e "s#opcache.enable=1#opcache.enable=0#g" /etc/php/php.ini
-    sed -i -e "s#opcache.enable_cli=1#opcache.enable_cli=0#g" /etc/php/php.ini
-
-fi
-
-# PHP Opcache Memory
-# If set
-if [ ! -z "$PHP_OPCACHE_MEMORY" ]; then
-    
-    # Set PHP.ini accordingly
-    sed -i -e "s#opcache.memory_consumption=16#opcache.memory_consumption=${PHP_OPCACHE_MEMORY}#g" /etc/php/php.ini
-
-fi
-
-# Print the real value
-printf "%-30s %-30s\n" "Opcache Memory Max:" "`php -r 'echo ini_get("opcache.memory_consumption");'`M"
-
-# PHP Session Config
-# If set
-if [ ! -z "$PHP_SESSION_STORE" ]; then
-    
-    # Figure out which session save handler is in use, currently only supports redis
-    if [ $PHP_SESSION_STORE == 'redis' ] || [ $PHP_SESSION_STORE == 'REDIS' ]; then
-        if [ -z $PHP_SESSION_STORE_REDIS_HOST ]; then
-            PHP_SESSION_STORE_REDIS_HOST='redis'
-        fi
-        if [ -z $PHP_SESSION_STORE_REDIS_PORT ]; then
-            PHP_SESSION_STORE_REDIS_PORT='6379'
-        fi
-        printf "%-30s %-30s\n" "PHP Sessions:" "Redis"
-        printf "%-30s %-30s\n" "PHP Redis Host:" "$PHP_SESSION_STORE_REDIS_HOST"
-        printf "%-30s %-30s\n" "PHP Redis Port:" "$PHP_SESSION_STORE_REDIS_PORT"
-        sed -i -e "s#session.save_handler = files#session.save_handler = redis\nsession.save_path = \"tcp://$PHP_SESSION_STORE_REDIS_HOST:$PHP_SESSION_STORE_REDIS_PORT\"#g" /etc/php/php.ini
-    fi
-
-fi
-
-# Max Execution Time
-# If set
-if [ ! -z "$MAX_EXECUTION_TIME" ]; then
-    # Set PHP.ini accordingly
-    sed -i -e "s#max_execution_time = 600#max_execution_time = ${MAX_EXECUTION_TIME}#g" /etc/php/php.ini
-
-    # Modify the nginx read timeout
-    sed -i -e "s#fastcgi_read_timeout 600s;#fastcgi_read_timeout ${MAX_EXECUTION_TIME}s;#g" /etc/nginx/sites-enabled/site.conf
-fi
-
-# Print the value
-printf "%-30s %-30s\n" "Nginx Max Read:" "`cat /etc/nginx/sites-enabled/site.conf | grep 'fastcgi_read_timeout' | sed -e 's/fastcgi_read_timeout//g'`"
-
-# Print the value
+printf "%-30s %-30s\n" "Nginx FastCgi Timeout:" "`cat /etc/nginx/conf.d/vh_default.conf | grep 'fastcgi_read_timeout' | sed -e 's/fastcgi_read_timeout//g'`"
 printf "%-30s %-30s\n" "PHP Max Execution Time:" "`cat /etc/php/php.ini | grep 'max_execution_time = ' | sed -e 's/max_execution_time = //g'`"
 
-# PHP-FPM Max Workers
-# If set
-if [ ! -z "$PHP_FPM_WORKERS" ]; then
-    # Set PHP.ini accordingly
-    sed -i -e "s#pm.max_children = 4#pm.max_children = $PHP_FPM_WORKERS#g" /etc/php/php-fpm.d/www.conf
 
-fi
-
-# Nginx custom snippets
-if [ -f /etc/nginx/custom.conf ]; then
-    printf "%-30s %-30s\n" "Custom Nginx Snippet:" "Enabled"
-    /usr/bin/php /usr/local/bin/nginx-custom
-fi
-
-if [ ! -f /etc/nginx/custom.conf ]; then
-    printf "%-30s %-30s\n" "Custom Nginx Snippet:" "Not Found"
-fi
-
-# Set SMTP settings
-if [ $ENVIRONMENT == 'production' ]; then
-    printf "%-30s %-30s\n" "SMTP:" "master-smtp.smtp-production:25"
-    sed -i -e "s#sendmail_path = /usr/sbin/sendmail -t -i#sendmail_path = /usr/sbin/sendmail -t -i -S master-smtp.smtp-production:25#g" /etc/php/php.ini
-    
-    if [ -z "$MAIL_HOST" ]; then
-        export MAIL_HOST=master-smtp.smtp-production
-    fi
-
-    if [ -z "$MAIL_PORT" ]; then
-        export MAIL_PORT=25
-    fi
-fi
-
-if [ $ENVIRONMENT == 'qa' ]; then
-    printf "%-30s %-30s\n" "SMTP:" "master-smtp.mailhog-production:25"
-    sed -i -e "s#sendmail_path = /usr/sbin/sendmail -t -i#sendmail_path = /usr/sbin/sendmail -t -i -S master-smtp.mailhog-production:25#g" /etc/php/php.ini
-    
-    if [ -z "$MAIL_HOST" ]; then
-        export MAIL_HOST=master-smtp.mailhog-production
-    fi
-
-    if [ -z "$MAIL_PORT" ]; then
-        export MAIL_PORT=25
-    fi
-fi
-
-if [ -z "$MAIL_DRIVER" ]; then
-    export MAIL_DRIVER=mail
+### PHP Opcache
+PHP_OPCACHE_DISABLE=`grep '^PHP_OPCACHE_DISABLE=' /x_config/php.evn | sed -e 's#PHP_OPCACHE_DISABLE=##g' | sed -e 's# ##g'`
+if [ ! -z "$PHP_OPCACHE_DISABLE" ]; then
+	printf "%-30s %-30s\n" "PHP Opcache:" "Disabled"
+	sed -i -e "s#opcache.enable=1#opcache.enable=0#g" /etc/php/php.ini
+	sed -i -e "s#opcache.enable_cli=1#opcache.enable_cli=0#g" /etc/php/php.ini
+else
+	printf "%-30s %-30s\n" "PHP Opcache:" "Enabled"
+### PHP Opcache Memory
+PHP_OPCACHE_MEMORY=`grep '^PHP_OPCACHE_MEMORY=' /x_config/php.evn | sed -e 's#PHP_OPCACHE_MEMORY=##g' | sed -e 's# ##g'`
+	if [ ! -z "$PHP_OPCACHE_MEMORY" ]; then
+		sed -i -e "s#opcache.memory_consumption=16#opcache.memory_consumption=${PHP_OPCACHE_MEMORY}#g" /etc/php/php.ini
+	fi
+	printf "%-30s %-30s\n" "Opcache Memory Max:" "`php -r 'echo ini_get("opcache.memory_consumption");'`M"
 fi
 
 
+### PHP Session Cache Header (Whether to send cache headers automatically for PHP scripts)
+PHP_SESSION_CACHE_DISABLE=`grep '^PHP_SESSION_CACHE_DISABLE=' /x_config/php.evn | sed -e 's#PHP_SESSION_CACHE_DISABLE=##g' | sed -e 's# ##g'`
+if [ ! -z "$PHP_SESSION_CACHE_DISABLE" ]; then
+	sed -i -e "s#session.cache_limiter = nocache#session.cache_limiter = ''#g" /etc/php/php.ini
+fi
 
-# Print the value
-printf "%-30s %-30s\n" "PHP-FPM Max Workers:" "`cat /etc/php/php-fpm.d/www.conf | grep 'pm.max_children = ' | sed -e 's/pm.max_children = //g'`"
-# End PHP-FPM
 
+### PHP Session Store (Figure out which session save handler is in use, currently only supports redis)
+PHP_SESSION_STORE=`grep '^PHP_SESSION_STORE=' /x_config/php.evn | sed -e 's#PHP_SESSION_STORE=##g' | sed -e 's# ##g'`
+if [ ! -z "$PHP_SESSION_STORE" ]; then
+	if [ $PHP_SESSION_STORE == 'redis' ] || [ $PHP_SESSION_STORE == 'REDIS' ]; then
+		printf "%-30s %-30s\n" "PHP Sessions:" "Redis"
+### PHP Session Store To REDIS HOST
+PHP_SESSION_STORE_REDIS_HOST=`grep '^PHP_SESSION_STORE_REDIS_HOST=' /x_config/php.evn | sed -e 's#PHP_SESSION_STORE_REDIS_HOST=##g' | sed -e 's# ##g'`
+		if [ -z $PHP_SESSION_STORE_REDIS_HOST ]; then
+			PHP_SESSION_STORE_REDIS_HOST='127.0.0.1'
+		fi
+		printf "%-30s %-30s\n" "PHP Redis Host:" "$PHP_SESSION_STORE_REDIS_HOST"
+### PHP Session Store To REDIS PORT
+PHP_SESSION_STORE_REDIS_PORT=`grep '^PHP_SESSION_STORE_REDIS_PORT=' /x_config/php.evn | sed -e 's#PHP_SESSION_STORE_REDIS_PORT=##g' | sed -e 's# ##g'`
+		if [ -z $PHP_SESSION_STORE_REDIS_PORT ]; then
+			PHP_SESSION_STORE_REDIS_PORT='6379'
+		fi
+		printf "%-30s %-30s\n" "PHP Redis Port:" "$PHP_SESSION_STORE_REDIS_PORT"
+		sed -i -e "s#session.save_handler = files#session.save_handler = redis\nsession.save_path = \"tcp://$PHP_SESSION_STORE_REDIS_HOST:$PHP_SESSION_STORE_REDIS_PORT\"#g" /etc/php/php.ini
+	fi
+fi
+
+
+echo "root.sh End!!"
 
 
 # Start supervisord and services

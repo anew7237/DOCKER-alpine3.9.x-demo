@@ -1,14 +1,14 @@
 ## BUILD
-docker build --force-rm -t anew7237/alpine3.9.x-sshd:20190716a . > _dockerBuild.log
-docker inspect anew7237/alpine3.9.x-sshd:20190716a >> _dockerBuild.log
+docker build --force-rm -t anew7237/alpine3.9.x-sshd:20190718a . > _dockerBuild.log
+docker inspect anew7237/alpine3.9.x-sshd:20190718a >> _dockerBuild.log
 
 ## RUN & TEST
-docker run -dt -p 31022:22 --name alpine3.9.x-sshd1 anew7237/alpine3.9.x-sshd:20190716a
+docker run -dt -p 31022:22 --name alpine3.9.x-sshd1 anew7237/alpine3.9.x-sshd:20190718a
 docker exec -it alpine3.9.x-sshd1 passwd -u root
 ##### ssh login to localhost:31022 #####
 docker kill alpine3.9.x-sshd1
 docker rm alpine3.9.x-sshd1
-docker rmi anew7237/alpine3.9.x-sshd:20190716a
+docker rmi anew7237/alpine3.9.x-sshd:20190718a
 
 ## Tag to latest
-docker tag anew7237/alpine3.9.x-sshd:20190716a anew7237/alpine3.9.x-sshd:latest
+docker tag anew7237/alpine3.9.x-sshd:20190718a anew7237/alpine3.9.x-sshd:latest
