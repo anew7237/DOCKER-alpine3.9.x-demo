@@ -3,15 +3,16 @@
 FROM alpine:3.9.4
 ARG ALPINE_IMAGE_TAG="3.9.4"
 ARG ALPINE_X_SUBNAME="sshd"
-ARG ALPINE_X_VERSION="20190718a"
-ARG ALPINE_X_MARKING="2019071800"
+ARG ALPINE_X_VERSION="20190723a"
+ARG ALPINE_X_MARKING="2019072300"
 
 LABEL description="Alpine ${ALPINE_IMAGE_TAG} + Openssh Server" \
 	maintainer="Andrew Hsieh<anew7237@gmail.com>" \
 	ALPINE_X_${ALPINE_X_SUBNAME}_version="${ALPINE_X_VERSION} - ${ALPINE_X_MARKING}" \
-	ALPINE_X_${ALPINE_X_SUBNAME}_tzdata="apk add & set to Shanghai" \
+	ALPINE_X_${ALPINE_X_SUBNAME}_tzdata="apk add tzdata & set to Shanghai" \
 	ALPINE_X_${ALPINE_X_SUBNAME}_openssh="apk add openssh openssh-server openssh-sftp-server & ssh-keygen rsa ecdsa ed25519 & set sshd_config & set ssh_config" \
 	ALPINE_X_${ALPINE_X_SUBNAME}_openssl="apk add openssl && create root passwd by md5" \
+	ALPINE_X_${ALPINE_X_SUBNAME}_rsync="apk add rsync" \
 	ALPINE_X_${ALPINE_X_SUBNAME}_root="chpasswd -e (md5) & set ~/.ssh/authorized_keys & passwd -l root"
 
 RUN echo "##### ##### ##### #####" >> /_dockerDebug.log \
@@ -40,6 +41,7 @@ RUN apk update \
 	&& mkdir -p /root/.ssh && chmod 700 /root/.ssh \
 	&& touch /root/.ssh/authorized_keys && chmod 600 /root/.ssh/authorized_keys \
 	&& cat /root/id_ed25519.pub >> /root/.ssh/authorized_keys && rm -f /root/id_ed25519.pub \
+	&& apk add --no-cache rsync \
 	&& rm -rf /var/cache/apk/*.apk && rm -rf /tmp/* && echo "$(date -u) ${ALPINE_X_MARKING} !!!DONE!!!" >> /_dockerDebug.log
 
 EXPOSE 22

@@ -1,10 +1,10 @@
 ### https://github.com/anew7237/DOCKER-alpine3.9.x-demo/alpine-openresty
 
-FROM anew7237/alpine-openresty:20190718a
+FROM anew7237/alpine-openresty:20190723a
 ARG ALPINE_IMAGE_TAG="3.9.x"
 ARG ALPINE_X_SUBNAME="php7resty"
-ARG ALPINE_X_VERSION="20190718a"
-ARG ALPINE_X_MARKING="201907180000"
+ARG ALPINE_X_VERSION="20190723a"
+ARG ALPINE_X_MARKING="201907230000"
 
 
 ARG PHP7_MODULES="\
@@ -34,20 +34,20 @@ php7-iconv@php7codecasts \
 ##php7-imap@php7codecasts \
 php7-intl@php7codecasts \
 php7-json@php7codecasts \
-#php7-ldap@php7codecasts \
+php7-ldap@php7codecasts \
 ##php7-litespeed@php7codecasts \
 php7-mbstring@php7codecasts \
-#php7-mysqli@php7codecasts \
-#php7-mysqlnd@php7codecasts \
+php7-mysqli@php7codecasts \
+php7-mysqlnd@php7codecasts \
 ##php7-odbc@php7codecasts \
 php7-opcache@php7codecasts \
 php7-openssl@php7codecasts \
 php7-pcntl@php7codecasts \
-#php7-pdo@php7codecasts \
+php7-pdo@php7codecasts \
 ##php7-pdo_dblib@php7codecasts \
-#php7-pdo_mysql@php7codecasts \
+php7-pdo_mysql@php7codecasts \
 ##php7-pdo_pgsql@php7codecasts \
-#php7-pdo_sqlite@php7codecasts \
+php7-pdo_sqlite@php7codecasts \
 ##php7-pear@php7codecasts \
 ##php7-pgsql@php7codecasts \
 php7-phar@php7codecasts \
@@ -59,7 +59,7 @@ php7-session@php7codecasts \
 ##php7-snmp@php7codecasts \
 php7-soap@php7codecasts \
 php7-sockets@php7codecasts \
-#php7-sqlite3@php7codecasts \
+php7-sqlite3@php7codecasts \
 ##php7-sysvmsg@php7codecasts \
 php7-tidy@php7codecasts \
 php7-wddx@php7codecasts \
@@ -71,17 +71,17 @@ php7-zip@php7codecasts \
 php7-zlib@php7codecasts \
 \
 ##php7-amqp@php7codecasts \
-#php7-apcu@php7codecasts \
+php7-apcu@php7codecasts \
 ##php7-ast@php7codecasts \
 ##php7-ds@php7codecasts \
-#php7-imagick@php7codecasts \
+php7-imagick@php7codecasts \
 ###php7-mailparse@php7codecasts \
 php7-memcached@php7codecasts \
 ##php7-mongodb@php7codecasts \
 ##php7-msgpack@php7codecasts \
 ##php7-psr@php7codecasts \
 ##php7-phalcon@php7codecasts \
-#php7-redis@php7codecasts \
+php7-redis@php7codecasts \
 ###php7-ssh2@php7codecasts \
 ##php7-swoole@php7codecasts \
 ##php7-timecop@php7codecasts \
