@@ -6,6 +6,12 @@ set -e
 echo "root.sh START"
 
 
+### Hosts Backup
+if [ ! -f /etc/hosts.docker ] ; then
+	cat /etc/hosts > /etc/hosts.docker
+fi
+
+
 ### Resolv & Bind9 Reset
 ANEW_DATETIME_STRING=`date +"%Y-%m-%dT%H:%M:%SZ"`
 if [ ! -f /etc/resolv.conf.docker ] ; then
