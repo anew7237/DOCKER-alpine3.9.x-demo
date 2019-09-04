@@ -3,8 +3,8 @@
 FROM anew7237/alpine3.9.x-anew:anewresty
 ARG ALPINE_IMAGE_TAG="3.9.x"
 ARG ALPINE_X_SUBNAME="openresty"
-ARG ALPINE_X_VERSION="20190723a"
-ARG ALPINE_X_MARKING="201907230000"
+ARG ALPINE_X_VERSION="20190904a"
+ARG ALPINE_X_MARKING="201909040000"
 
 
 ### RESTY_TARBALL_GETTYPE: coderesty, testresty, anewresty
@@ -116,7 +116,6 @@ RUN echo "##### ##### ##### #####" >> /_dockerDebug.log \
 COPY _COPY_/x_htdocs/default			/x_htdocs/default
 COPY _COPY_/etc/nginx/conf/* 			/etc/nginx/conf/
 COPY _COPY_/etc/nginx/conf.d/*			/etc/nginx/conf.d/
-COPY _COPY_/etc/supervisor.d/20-redis.ini	/etc/supervisor.d/20-redis.ini
 COPY _COPY_/etc/supervisor.d/40-nginx.ini	/etc/supervisor.d/40-nginx.ini
 
 RUN apk add --no-cache --virtual .build-deps \
@@ -225,7 +224,6 @@ RUN apk add --no-cache --virtual .build-deps \
     && ln -sf /dev/stdout /usr/local/openresty/nginx/logs/access.log \
     && ln -sf /dev/stderr /usr/local/openresty/nginx/logs/error.log \
 	\
-	&& apk add --no-cache redis \
 	&& rm -rf /x_resty \
 	&& rm -rf /var/cache/apk/*.apk && rm -rf /tmp/* && echo "$(date -u) ${ALPINE_X_MARKING} !!!DONE!!!" >> /_dockerDebug.log
 ### ### ANEW7237 END!! ### ###

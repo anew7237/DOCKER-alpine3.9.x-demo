@@ -1,9 +1,11 @@
 #!/bin/sh
+###ANEW:20190904a
 
 set -e
 #set -x
 
-echo "root.sh START"
+PATH_SCRIPT_THIS=$(readlink -f "$0")
+printf "\033[1;1m vvv START $PATH_SCRIPT_THIS vvv \033[0m\n"
 
 
 ### Hosts Backup
@@ -37,9 +39,12 @@ printf "%-30s %-30s\n" "Resolv (/etc/resolv.conf):"
 cat /etc/resolv.conf
 
 
-echo "root.sh End!!"
+printf "\033[1;1m ^^^ END.. $PATH_SCRIPT_THIS ^^^ \033[0m\n"
+
+
+/bin/sh /x_script/init.sh
 
 
 # Start supervisord and services
-printf "\n\033[1;1mStarting supervisord\033[0m\n\n"
+printf "\n\033[1;1m >>> Starting supervisord <<< \033[0m\n\n"
 exec /usr/bin/supervisord -n -c /etc/supervisord.conf

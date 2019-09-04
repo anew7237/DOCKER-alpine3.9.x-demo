@@ -1,3 +1,4 @@
+###ANEW:20190903a
 # do daily/weekly/monthly maintenance
 #min	hour	day	month	weekday	command
 */15	*	*	*	*	run-parts /etc/periodic/15min
@@ -7,16 +8,16 @@
 0	5	1	*	*	run-parts /etc/periodic/monthly
 
 ######  ######  ######  ######  ######  ######  ######  
-*/1	*	*	*	*	/x_script/root_01.sh
-*/5	*	*	*	*	/x_script/root_05.sh
-*/10	*	*	*	*	/x_script/root_10.sh
-*/15	*	*	*	*	/x_script/root_15.sh
-*/20	*	*	*	*	/x_script/root_20.sh
-*/30	*	*	*	*	/x_script/root_30.sh
-0	*	*	*	*	/x_script/root_01H.sh
-0	*/2	*	*	*	/x_script/root_02H.sh
-0	*/4	*	*	*	/x_script/root_04H.sh
-0	*/6	*	*	*	/x_script/root_06H.sh
-0	*/8	*	*	*	/x_script/root_08H.sh
-0	*/8	*	*	*	/x_script/root_12H.sh
-0	1	*	*	*	/x_script/root_01D.sh
+*/1	*	*	*	*	/bin/bash /x_script/root_01.sh
+#*/5	*	*	*	*	/bin/bash /x_script/root_05.sh
+#*/10	*	*	*	*	/bin/bash /x_script/root_10.sh
+#*/15	*	*	*	*	/bin/bash /x_script/root_15.sh
+#*/20	*	*	*	*	/bin/bash /x_script/root_20.sh
+#*/30	*	*	*	*	/bin/bash /x_script/root_30.sh
+#0	*	*	*	*	/bin/bash /x_script/root_01H.sh
+#0	*/2	*	*	*	/bin/bash /x_script/root_02H.sh
+#0	*/4	*	*	*	/bin/bash /x_script/root_04H.sh
+#0	*/6	*	*	*	/bin/bash /x_script/root_06H.sh
+#0	*/8	*	*	*	/bin/bash /x_script/root_08H.sh
+#0	*/8	*	*	*	/bin/bash /x_script/root_12H.sh
+#0	1	*	*	*	/bin/bash /x_script/root_01D.sh

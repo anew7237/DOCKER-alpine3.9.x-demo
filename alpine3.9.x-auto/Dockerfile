@@ -3,8 +3,8 @@
 FROM anew7237/alpine3.9.x-sshd:latest
 ARG ALPINE_IMAGE_TAG="3.9.x"
 ARG ALPINE_X_SUBNAME="auto"
-ARG ALPINE_X_VERSION="20190723a"
-ARG ALPINE_X_MARKING="201907230000"
+ARG ALPINE_X_VERSION="20190904a"
+ARG ALPINE_X_MARKING="201909040000"
 
 LABEL description="Alpine ${ALPINE_IMAGE_TAG} + Supervisor" \
 	maintainer="Andrew Hsieh<anew7237@gmail.com>" \
