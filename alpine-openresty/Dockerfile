@@ -3,8 +3,8 @@
 FROM anew7237/alpine3.9.x-anew:anewresty
 ARG ALPINE_IMAGE_TAG="3.9.x"
 ARG ALPINE_X_SUBNAME="openresty"
-ARG ALPINE_X_VERSION="20190904a"
-ARG ALPINE_X_MARKING="201909040000"
+ARG ALPINE_X_VERSION="20190916a"
+ARG ALPINE_X_MARKING="201909160000"
 
 
 ### RESTY_TARBALL_GETTYPE: coderesty, testresty, anewresty
@@ -26,11 +26,12 @@ ARG RESTY_TARBALL_GETTYPE="anewresty"
 # Docker Build Arguments
 ARG RESTY_IMAGE_BASE="alpine"
 ARG RESTY_IMAGE_TAG="3.9"
-ARG RESTY_VERSION="1.15.8.1"
+ARG RESTY_VERSION="1.15.8.2"
 ARG RESTY_OPENSSL_VERSION="1.1.1c"
-ARG RESTY_PCRE_VERSION="8.42"
+ARG RESTY_PCRE_VERSION="8.43"
 ARG RESTY_J="1"
 ARG RESTY_CONFIG_OPTIONS="\
+    --with-compat \
     --with-file-aio \
     --with-http_addition_module \
     --with-http_auth_request_module \
@@ -67,10 +68,18 @@ ARG RESTY_CONFIG_OPTIONS="\
 	--http-scgi-temp-path=/x_husers/scgi_temp \
     "
 ARG RESTY_CONFIG_OPTIONS_MORE=""
+ARG RESTY_LUAJIT_OPTIONS="--with-luajit-xcflags='-DLUAJIT_NUMMODE=2 -DLUAJIT_ENABLE_LUA52COMPAT'"
+
 ARG RESTY_ADD_PACKAGE_BUILDDEPS=""
 ARG RESTY_ADD_PACKAGE_RUNDEPS=""
 ARG RESTY_EVAL_PRE_CONFIGURE=""
 ARG RESTY_EVAL_POST_MAKE=""
+
+# These are not intended to be user-specified
+ARG _RESTY_CONFIG_DEPS="--with-pcre \
+    --with-cc-opt='-DNGX_LUA_ABORT_AT_PANIC -I/usr/local/openresty/pcre/include -I/usr/local/openresty/openssl/include' \
+    --with-ld-opt='-L/usr/local/openresty/pcre/lib -L/usr/local/openresty/openssl/lib -Wl,-rpath,/usr/local/openresty/pcre/lib:/usr/local/openresty/openssl/lib' \
+    "
 
 LABEL resty_image_base="${RESTY_IMAGE_BASE}"
 LABEL resty_image_tag="${RESTY_IMAGE_TAG}"
@@ -79,13 +88,11 @@ LABEL resty_openssl_version="${RESTY_OPENSSL_VERSION}"
 LABEL resty_pcre_version="${RESTY_PCRE_VERSION}"
 LABEL resty_config_options="${RESTY_CONFIG_OPTIONS}"
 LABEL resty_config_options_more="${RESTY_CONFIG_OPTIONS_MORE}"
+LABEL resty_config_deps="${_RESTY_CONFIG_DEPS}"
 LABEL resty_add_package_builddeps="${RESTY_ADD_PACKAGE_BUILDDEPS}"
 LABEL resty_add_package_rundeps="${RESTY_ADD_PACKAGE_RUNDEPS}"
 LABEL resty_eval_pre_configure="${RESTY_EVAL_PRE_CONFIGURE}"
 LABEL resty_eval_post_make="${RESTY_EVAL_POST_MAKE}"
-
-# These are not intended to be user-specified
-ARG _RESTY_CONFIG_DEPS="--with-openssl=/tmp/openssl-${RESTY_OPENSSL_VERSION} --with-pcre=/tmp/pcre-${RESTY_PCRE_VERSION}"
 
 
 ### ### ANEW7237 START ### ###
@@ -140,15 +147,16 @@ RUN apk add --no-cache --virtual .build-deps \
         ${RESTY_ADD_PACKAGE_RUNDEPS} \
     && cd /tmp \
     && if [ -n "${RESTY_EVAL_PRE_CONFIGURE}" ]; then eval $(echo ${RESTY_EVAL_PRE_CONFIGURE}); fi \
-	\
+	&& cd /tmp \
 	&& if [ "${RESTY_TARBALL_GETTYPE}" == "coderesty" ] ; then \
 		mv /x_resty/openresty-${RESTY_TARBALL_VERSION}.tgz 	./openresty-${RESTY_TARBALL_VERSION}.tar.gz	;\
 	 elif [ "${RESTY_TARBALL_GETTYPE}" == "testresty" ] ; then \
 		mv /x_resty/openresty-${RESTY_TARBALL_VERSION}.tar.gz 	./openresty-${RESTY_TARBALL_VERSION}.tar.gz	;\
 	 else \
-		curl -fSL https://openresty.org/download/openresty-${RESTY_TARBALL_VERSION}.tar.gz -o openresty-${RESTY_TARBALL_VERSION}.tar.gz ;\
+		curl -fSL https://github.com/openresty/openresty/releases/download/v${RESTY_TARBALL_VERSION}/openresty-${RESTY_TARBALL_VERSION}.tar.gz -o openresty-${RESTY_TARBALL_VERSION}.tar.gz	;\
 	   fi \
 	&& tar -xzf openresty-${RESTY_TARBALL_VERSION}.tar.gz \
+	&& cd /tmp \
 	&& if [ "${RESTY_TARBALL_GETTYPE}" == "coderesty" ] ; then \
 		mv /x_resty/openssl-${RESTY_OPENSSL_VERSION}.tgz	./openssl-${RESTY_OPENSSL_VERSION}.tar.gz	\
 		&& sed -i "s#    . auto/lib/openssl/make.*#    . auto/lib/openssl/make.anew#g"	./openresty-${RESTY_TARBALL_VERSION}/bundle/nginx-${RESTY_NGINX_VERSION}/auto/lib/make		\
@@ -159,6 +167,29 @@ RUN apk add --no-cache --virtual .build-deps \
 		curl -fSL https://www.openssl.org/source/openssl-${RESTY_OPENSSL_VERSION}.tar.gz -o openssl-${RESTY_OPENSSL_VERSION}.tar.gz ;\
 	   fi \
 	&& tar -xzf openssl-${RESTY_OPENSSL_VERSION}.tar.gz \
+	&& if [ "${RESTY_TARBALL_GETTYPE}" != "coderesty" ] ; then \
+		echo "Build openssl ${RESTY_OPENSSL_VERSION}" \
+    && cd openssl-${RESTY_OPENSSL_VERSION} \
+    && if [ $(echo ${RESTY_OPENSSL_VERSION} | cut -c 1-5) = "1.1.1" ] ; then \
+        echo 'patching OpenSSL 1.1.1 for OpenResty' \
+        && curl -s https://raw.githubusercontent.com/openresty/openresty/master/patches/openssl-1.1.1c-sess_set_get_cb_yield.patch | patch -p1 ; \
+    fi \
+    && if [ $(echo ${RESTY_OPENSSL_VERSION} | cut -c 1-5) = "1.1.0" ] ; then \
+        echo 'patching OpenSSL 1.1.0 for OpenResty' \
+        && curl -s https://raw.githubusercontent.com/openresty/openresty/ed328977028c3ec3033bc25873ee360056e247cd/patches/openssl-1.1.0j-parallel_build_fix.patch | patch -p1 \
+        && curl -s https://raw.githubusercontent.com/openresty/openresty/master/patches/openssl-1.1.0d-sess_set_get_cb_yield.patch | patch -p1 ; \
+    fi \
+    && ./config \
+      no-threads shared zlib -g \
+      enable-ssl3 enable-ssl3-method \
+      --prefix=/usr/local/openresty/openssl \
+      --libdir=lib \
+      -Wl,-rpath,/usr/local/openresty/openssl/lib \
+    && make -j${RESTY_J} \
+    && make -j${RESTY_J} install_sw \
+		&& echo "Build openssl !!!!!DONE!!!!!" ;\
+	   fi \
+	&& cd /tmp \
 	&& if [ "${RESTY_TARBALL_GETTYPE}" == "coderesty" ] ; then \
 		mv /x_resty/pcre-${RESTY_PCRE_VERSION}.tgz 		./pcre-${RESTY_PCRE_VERSION}.tar.gz		\
 		&& sed -i "s#    . auto/lib/pcre/make.*#    . auto/lib/pcre/make.anew#g" 	./openresty-${RESTY_TARBALL_VERSION}/bundle/nginx-${RESTY_NGINX_VERSION}/auto/lib/make		\
@@ -169,7 +200,20 @@ RUN apk add --no-cache --virtual .build-deps \
 		curl -fSL https://ftp.pcre.org/pub/pcre/pcre-${RESTY_PCRE_VERSION}.tar.gz -o pcre-${RESTY_PCRE_VERSION}.tar.gz ;\
 	   fi \
 	&& tar -xzf pcre-${RESTY_PCRE_VERSION}.tar.gz \
-	\
+	&& if [ "${RESTY_TARBALL_GETTYPE}" != "coderesty" ] ; then \
+		echo "Build pcre ${RESTY_OPENSSL_VERSION}" \
+    && cd /tmp/pcre-${RESTY_PCRE_VERSION} \
+    && ./configure \
+        --prefix=/usr/local/openresty/pcre \
+        --disable-cpp \
+        --enable-jit \
+        --enable-utf \
+        --enable-unicode-properties \
+    && make -j${RESTY_J} \
+    && make -j${RESTY_J} install \
+		&& echo "Build pcre !!!!!DONE!!!!!" ;\
+	   fi \
+	&& cd /tmp \
 	&& if [ "${RESTY_TARBALL_GETTYPE}" == "coderesty" ] ; then \
 		mv /x_resty/sregex.20190711.tgz		. \
 		&& tar -xzf sregex.20190711.tgz		\
@@ -180,8 +224,8 @@ RUN apk add --no-cache --virtual .build-deps \
 	 else \
 		git clone https://github.com/openresty/sregex.git ;\
 	   fi \
-	&& cd sregex && make && make install && cd /tmp/ \
-	\
+	&& cd sregex && make && make install \
+	&& cd /tmp \
 	&& if [ "${RESTY_TARBALL_GETTYPE}" == "coderesty" ] ; then \
 		mv /x_resty/replace-filter-nginx-module.20190711.tgz		. \
 		&& tar -xzf replace-filter-nginx-module.20190711.tgz		\
@@ -192,7 +236,7 @@ RUN apk add --no-cache --virtual .build-deps \
 	 else \
 		git clone https://github.com/openresty/replace-filter-nginx-module.git ;\
 	   fi \
-		\
+	&& cd /tmp \
 	&& if [ "${RESTY_TARBALL_GETTYPE}" == "coderesty" ] ; then \
 		mv /x_resty/ngx_brotli.20190711.tgz		. \
 		&& tar -xzf ngx_brotli.20190711.tgz		\
@@ -205,25 +249,17 @@ RUN apk add --no-cache --virtual .build-deps \
 	   fi \
 	\
 	&& cd /tmp/openresty-${RESTY_TARBALL_VERSION} \
-	&& if [ "${RESTY_TARBALL_GETTYPE}" != "coderesty" ] ; then \
-		echo "Patching Nginx ${RESTY_NGINX_VERSION}" \
-		&& if [[ "1.1.1" == $(echo -e "${RESTY_OPENSSL_VERSION}\n1.1.1" | sort -V | head -n1) ]] ; then \
-			echo 'Patching Nginx for OpenSSL 1.1.1' \
-			&& cd bundle/nginx-${RESTY_NGINX_VERSION} \
-			&& curl -s https://raw.githubusercontent.com/openresty/openresty/master/patches/nginx-${RESTY_NGINX_VERSION}-ssl_cert_cb_yield.patch | patch -p1 \
-			&& curl -s https://raw.githubusercontent.com/openresty/openresty/master/patches/nginx-${RESTY_NGINX_VERSION}-ssl_sess_cb_yield.patch | patch -p1 \
-			&& cd ../.. ;\
-		fi \
-		&& echo "Patching Nginx !!!DONE!!!" ;\
-	   fi \
-    && ./configure -j${RESTY_J} ${_RESTY_CONFIG_DEPS} ${RESTY_CONFIG_OPTIONS} ${RESTY_CONFIG_OPTIONS_MORE} \
+	&& if [ "${RESTY_TARBALL_GETTYPE}" != "" ] ; then \
+		echo "Build openresty ${RESTY_OPENSSL_VERSION}" \
+    && eval ./configure -j${RESTY_J} ${_RESTY_CONFIG_DEPS} ${RESTY_CONFIG_OPTIONS} ${RESTY_CONFIG_OPTIONS_MORE} ${RESTY_LUAJIT_OPTIONS} \
     && make -j${RESTY_J} \
     && make -j${RESTY_J} install \
     && apk del .build-deps \
     && if [ -n "${RESTY_EVAL_POST_MAKE}" ]; then eval $(echo ${RESTY_EVAL_POST_MAKE}); fi \
     && ln -sf /dev/stdout /usr/local/openresty/nginx/logs/access.log \
     && ln -sf /dev/stderr /usr/local/openresty/nginx/logs/error.log \
-	\
+		&& echo "Build openresty !!!!!DONE!!!!!" ;\
+	   fi \
 	&& rm -rf /x_resty \
 	&& rm -rf /var/cache/apk/*.apk && rm -rf /tmp/* && echo "$(date -u) ${ALPINE_X_MARKING} !!!DONE!!!" >> /_dockerDebug.log
 ### ### ANEW7237 END!! ### ###

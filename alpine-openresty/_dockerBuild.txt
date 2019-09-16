@@ -1,27 +1,35 @@
 ## BUILD
-docker build --force-rm -t anew7237/alpine-openresty:20190904a . > _dockerBuild.log
-docker inspect anew7237/alpine-openresty:20190904a >> _dockerBuild.log
+docker build --force-rm -t anew7237/alpine-openresty:20190916a . > _dockerBuild.log
+docker inspect anew7237/alpine-openresty:20190916a >> _dockerBuild.log
 
 ## RUN & TEST
-docker run -dt -p 35022:22 -p 35080:80 -p 35443:443 -p 35001:9001 --name alpine-openresty1 anew7237/alpine-openresty:20190904a
+docker run -dt -p 35022:22 -p 35080:80 -p 35443:443 -p 35001:9001 --name alpine-openresty1 anew7237/alpine-openresty:20190916a
 docker exec -it alpine-openresty1 sh
 ##### ssh login to localhost:35022 #####
 docker kill alpine-openresty1
 docker rm alpine-openresty1
-docker rmi anew7237/alpine-openresty:20190904a
+docker rmi anew7237/alpine-openresty:20190916a
 
 ## Tag to latest
-docker tag anew7237/alpine-openresty:20190904a anew7237/alpine-openresty:latest
+docker tag anew7237/alpine-openresty:20190916a anew7237/alpine-openresty:latest
 
 ##### ##### ##### ##### ##### ##### ##### ##### ##### ##### ##### 
 ## BUILD - php7fpm
-docker build --force-rm -t anew7237/alpine-openresty:20190904a-php7fpm -f ./Dockerfile.php7fpm.txt . > _dockerBuild.php7fpm.log
-docker inspect anew7237/alpine-openresty:20190904a-php7fpm >> _dockerBuild.php7fpm.log
+docker build --force-rm -t anew7237/alpine-openresty:20190916a-php7fpm -f ./Dockerfile.php7fpm.txt . > _dockerBuild.php7fpm.log
+docker inspect anew7237/alpine-openresty:20190916a-php7fpm >> _dockerBuild.php7fpm.log
 
 ## RUN & TEST
-docker run -dt -p 36022:22 -p 36080:80 -p 36443:443 -p 36001:9001 --name alpine-php7resty1 anew7237/alpine-openresty:20190904a-php7fpm
+docker run -dt -p 36022:22 -p 36080:80 -p 36443:443 -p 36001:9001 --name alpine-php7resty1 anew7237/alpine-openresty:20190916a-php7fpm
 docker exec -it alpine-php7resty1 sh
 ##### ssh login to localhost:35022 #####
 docker kill alpine-php7resty1
 docker rm alpine-php7resty1
-docker rmi anew7237/alpine-openresty:20190904a-php7fpm
+docker rmi anew7237/alpine-openresty:20190916a-php7fpm
+
+##### ##### ##### ##### ##### ##### ##### ##### ##### ##### ##### 
+## BUILD - 1.15.8.1
+docker build --force-rm -t anew7237/alpine-openresty:1.15.8.1 -f ./_SRC_/Dockerfile.1.15.8.1.src ./_SRC_ 
+
+##### ##### ##### ##### ##### ##### ##### ##### ##### ##### ##### 
+## BUILD - 1.15.8.2
+docker build --force-rm -t anew7237/alpine-openresty:1.15.8.2 -f ./_SRC_/Dockerfile.1.15.8.2.src ./_SRC_ 
